@@ -49,11 +49,12 @@ public class MainActivity extends AppCompatActivity {
         textViewDate.setText(currentDate);
 
         // Format the time to show only hours and minutes
-        String currentTime = new SimpleDateFormat(showColon ? "HH:mm" : "HH mm", Locale.getDefault()).format(new Date());
+        String currentTime = new SimpleDateFormat(showColon ? "h:mm" : "h mm", Locale.getDefault()).format(new Date());
         textViewTime.setText(currentTime);
 
         // Toggle the colon every second
         showColon = !showColon;
+        showColon = true;
     }
 
     @Override
