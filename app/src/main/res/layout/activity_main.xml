@@ -3,28 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:gravity="center"
+    android:weightSum="3">
 
+    <!-- TextView for the time -->
     <TextView
         android:id="@+id/textViewTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2.4"
         android:fontFamily="@font/roboto_condensed_regular"
+        android:gravity="center|top"
+        android:textAlignment="gravity"
+        android:paddingTop="0dp"
         android:textColor="#FF0000"
-        android:textSize="500sp"
+        android:textSize="396sp"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="-16sp"
         android:textStyle="bold" />
 
-    <!--
+    <!-- TextView for the date -->
     <TextView
         android:id="@+id/textViewDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:fontFamily="monospace"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".5"
         android:textColor="#FF0000"
-        android:textSize="180sp"
-        android:textStyle="bold" />
-        -->
+        android:textSize="80sp"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="-16sp"
+        android:fontFamily="@font/roboto_condensed_regular"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textAlignment="center" />
+
 
 </LinearLayout>
