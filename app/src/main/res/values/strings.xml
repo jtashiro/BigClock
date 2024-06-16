@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BigClock</string>
+    <string name="temp">%1$s\u00B0<sup>F</sup></string>
 </resources>
