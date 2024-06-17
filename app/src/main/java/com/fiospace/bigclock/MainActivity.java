@@ -1,8 +1,12 @@
 package com.fiospace.bigclock;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.WindowManager;
 import android.widget.TextView;
 import java.text.SimpleDateFormat;
@@ -40,13 +44,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/";
     private FusedLocationProviderClient fusedLocationClient;
 
-    private TextView textViewTime;
-    private TextView textViewDate;
-    private TextView textViewWeather;
+    private AutoResizeTextView textViewTime;
+    private AutoResizeTextView textViewDate;
+    private AutoResizeTextView textViewWeather;
 
     private Handler handler = new Handler();
     private Runnable runnable;
     private boolean showColon = true;
+
+    private Handler weatherUpdateHandler;
+    private Runnable weatherUpdateRunnable;
+    private int updateFrequency = 60000 * 60; // Default frequency in milliseconds (1 hour)
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +78,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        } else {
+        }
+        /*
+        else {
             getLocationAndFetchWeather();
         }
+*/
 
         runnable = new Runnable() {
             @Override
@@ -81,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         handler.post(runnable);
+
+        startWeatherUpdates();
+
+        // Adjust font size based on device settings
+        //adjustFontSizes();
     }
 
     private void getLocationAndFetchWeather() {
@@ -100,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchWeather(double lat, double lon) {
+        Log.i(TAG, "fetchWeather API call");
+
         Gson gson = new GsonBuilder().create();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -131,6 +150,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    private void startWeatherUpdates() {
+        weatherUpdateHandler = new Handler(Looper.getMainLooper());
+        weatherUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                getLocationAndFetchWeather();
+                weatherUpdateHandler.postDelayed(this, updateFrequency);
+            }
+        };
+        weatherUpdateHandler.post(weatherUpdateRunnable);
+    }
+
+    private void stopWeatherUpdates() {
+        if (weatherUpdateHandler != null && weatherUpdateRunnable != null) {
+            weatherUpdateHandler.removeCallbacks(weatherUpdateRunnable);
+        }
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -157,7 +196,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopWeatherUpdates();
         handler.removeCallbacks(runnable);
     }
 
+    private float getFontScale() {
+        Configuration configuration = getResources().getConfiguration();
+        return configuration.fontScale;
+    }
+
+    private void adjustFontSizes() {
+        float fontScale = getFontScale();
+        Log.i(TAG,"fontScale=" + fontScale);
+
+        // Adjust the font sizes based on the scale
+        textViewTime.setTextSize(396 * fontScale);
+        textViewDate.setTextSize(80 * fontScale);
+        textViewWeather.setTextSize(125 * fontScale);
+    }
+
+
+
 }
+
