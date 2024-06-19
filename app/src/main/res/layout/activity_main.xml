@@ -1,21 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="0dp"
-    android:weightSum="3">
+    android:weightSum="3"
+    android:fitsSystemWindows="true">
 
-    <!-- TextView for the time -->
+    <!-- Toolbar for settings -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="0dp"
+        android:layout_weight=".18"
+        android:background="@color/black"
+        app:titleTextColor="@color/red" />
 
-    <com.fiospace.bigclock.AutoResizeTextView
+    <!-- MaterialTextView for the time -->
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textViewTime"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="0dp"
-        android:layout_weight="2.4"
+        android:layout_weight="2.3"
         android:fontFamily="@font/roboto_condensed_regular"
         android:gravity="center"
         android:includeFontPadding="false"
@@ -23,54 +34,63 @@
         android:minHeight="0dp"
         android:padding="0dp"
         android:paddingTop="0dp"
-        android:textAlignment="center"
         android:textColor="#FF0000"
-        android:textSize="500sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:autoSizeMaxTextSize="5000sp"
+        app:autoSizeMinTextSize="12sp"
+        app:autoSizeStepGranularity="2sp"
+        app:autoSizeTextType="uniform"
+        app:contentPadding="0dp"
+        app:maxLines="1" />
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight=".8"
+        android:layout_weight=".5"
         android:background="#000000"
         android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="0dp"
-        android:weightSum="2"
+        android:weightSum="2">
 
-        >
-
-
-        <!-- TextView for the date -->
-        <com.fiospace.bigclock.AutoResizeTextView
+        <!-- MaterialTextView for the date -->
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/textViewDate"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:fontFamily="@font/roboto_condensed_regular"
             android:gravity="center"
             android:includeFontPadding="false"
             android:lineSpacingExtra="0dp"
-            android:textAlignment="center"
             android:textColor="@color/cyan"
-            android:textSize="100sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:autoSizeMaxTextSize="700sp"
+            app:autoSizeMinTextSize="80sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintBottom_toBottomOf="@+id/textViewWeather"
+            app:layout_constraintEnd_toStartOf="@+id/textViewWeather"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textViewWeather"
+            app:maxLines="1" />
 
-        <!-- TextView for the weather -->
-        <com.fiospace.bigclock.AutoResizeTextView
+        <!-- MaterialTextView for the weather -->
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/textViewWeather"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
             android:fontFamily="@font/roboto_condensed_regular"
             android:gravity="center|top"
             android:includeFontPadding="false"
             android:lineSpacingExtra="0dp"
             android:paddingTop="0dp"
-            android:textAlignment="gravity"
             android:textColor="@color/white"
-            android:textSize="140sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
+            android:textStyle="bold"
+            app:autoSizeMaxTextSize="1700sp"
+            app:autoSizeMinTextSize="80sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textViewDate"
+            app:maxLines="1" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

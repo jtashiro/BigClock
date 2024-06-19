@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.logging.interceptor)
     implementation(libs.play.services.location)
+    implementation(libs.preference)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
