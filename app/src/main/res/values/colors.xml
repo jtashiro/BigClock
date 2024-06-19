@@ -21,6 +21,6 @@
     <color name="toolbar_text_color">#00FFFF</color>
     <color name="settings_background">#FFFFFF</color>
     <color name="default_color">#0000FF</color>
-
     <color name="preferenceBackground">#FFFFFF</color>
+    <color name="borderColor">#000000</color>
 </resources>

@@ -109,9 +109,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         // Keep the screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+
         textViewTime = findViewById(R.id.textViewTime);
         textViewDate = findViewById(R.id.textViewDate);
         textViewWeather = findViewById(R.id.textViewWeather);
+        adjustFontSizes();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -250,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Log.i(TAG, "fontScale=" + fontScale);
 
         // Adjust the font sizes based on the scale
-        textViewTime.setTextSize(396 * fontScale);
+        textViewTime.setTextSize(500 * fontScale);
         textViewDate.setTextSize(80 * fontScale);
         textViewWeather.setTextSize(125 * fontScale);
     }
