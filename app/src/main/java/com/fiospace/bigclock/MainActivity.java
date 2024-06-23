@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private Runnable weatherUpdateRunnable;
     private Handler marketUpdateHandler;
     private Runnable marketUpdateRunnable;
-    private int marketUpdateFrequency = 60000 * 1; // 5 minutes
+    private int marketUpdateFrequency = 60000 * 5; // 5 minutes
     private int updateFrequency = 60000 * 60; // Default frequency in milliseconds (1 hour)
 
     private SharedPreferences sharedPreferences;
@@ -303,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.e(TAG,e.getMessage());
             }
         });
     }
