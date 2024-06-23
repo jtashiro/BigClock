@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private Runnable weatherUpdateRunnable;
     private Handler marketUpdateHandler;
     private Runnable marketUpdateRunnable;
-    private int marketUpdateFrequency = 60000 * 5; // 5 minutes
+    private int marketUpdateFrequency = 60000 * 1; // 5 minutes
     private int updateFrequency = 60000 * 60; // Default frequency in milliseconds (1 hour)
 
     private SharedPreferences sharedPreferences;
@@ -138,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
+        executorService = Executors.newSingleThreadExecutor();
+
         runnable = new Runnable() {
             @Override
             public void run() {
@@ -148,8 +150,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         handler.post(runnable);
 
         startWeatherUpdates();
-        executorService = Executors.newSingleThreadExecutor();
-        fetchMarketData();
+        startMarketUpdates();
+        //fetchMarketData();
     }
 
     private void getLocationAndFetchWeather() {
@@ -277,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private void fetchMarketData() {
         executorService.execute(() -> {
             try {
+                Log.i(TAG,"fetchMarketData() API call.");
                 URL url = new URL("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
@@ -294,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     currencyFormat.setMaximumFractionDigits(0);
                     String formattedPrice = currencyFormat.format(btcPrice);
                     runOnUiThread(() -> textViewBTC.setText(formattedPrice));
-                    Log.i(TAG, "BTC Price: $" + formattedPrice);
+                    Log.i(TAG, "BTC Price: " + formattedPrice);
                 } finally {
                     urlConnection.disconnect();
                 }
@@ -309,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     protected void onDestroy() {
         super.onDestroy();
         stopWeatherUpdates();
-        //stopMarketUpdates();
+        stopMarketUpdates();
         executorService.shutdown();
         handler.removeCallbacks(runnable);
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
