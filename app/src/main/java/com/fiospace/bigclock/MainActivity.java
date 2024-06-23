@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,15 +30,24 @@ import com.google.android.material.textview.MaterialTextView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.json.JSONObject;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener  {
     private static final String TAG = "MainActivity";
@@ -56,9 +66,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private Handler weatherUpdateHandler;
     private Runnable weatherUpdateRunnable;
+    private Handler marketUpdateHandler;
+    private Runnable marketUpdateRunnable;
+    private int marketUpdateFrequency = 60000 * 5; // 5 minutes
     private int updateFrequency = 60000 * 60; // Default frequency in milliseconds (1 hour)
 
     private SharedPreferences sharedPreferences;
+
+    private MaterialTextView textViewBTC;
+    private ExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +129,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         textViewTime = findViewById(R.id.textViewTime);
         textViewDate = findViewById(R.id.textViewDate);
         textViewWeather = findViewById(R.id.textViewWeather);
-        adjustFontSizes();
+        textViewBTC = findViewById(R.id.textViewBTC);
+        //adjustFontSizes();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -131,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         handler.post(runnable);
 
         startWeatherUpdates();
+        executorService = Executors.newSingleThreadExecutor();
+        fetchMarketData();
     }
 
     private void getLocationAndFetchWeather() {
@@ -210,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -221,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void updateTime() {
-        String currentDate = new SimpleDateFormat("EEE MMM d", Locale.getDefault()).format(new Date());
+        String currentDate = new SimpleDateFormat("EEE, MMM d", Locale.getDefault()).format(new Date());
         textViewDate.setText(currentDate);
 
         // Format the time to show only hours and minutes
@@ -233,10 +253,64 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         showColon = true;
     }
 
+    /**
+     * async calls to get market prices
+     */
+    private void startMarketUpdates() {
+        marketUpdateHandler = new Handler(Looper.getMainLooper());
+        marketUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchMarketData();
+                marketUpdateHandler.postDelayed(this, marketUpdateFrequency);
+            }
+        };
+        marketUpdateHandler.post(marketUpdateRunnable);
+    }
+
+    private void stopMarketUpdates() {
+        if (marketUpdateHandler != null && marketUpdateRunnable != null) {
+            marketUpdateHandler.removeCallbacks(marketUpdateRunnable);
+        }
+    }
+
+    private void fetchMarketData() {
+        executorService.execute(() -> {
+            try {
+                URL url = new URL("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                try {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    in.close();
+                    String result = response.toString();
+                    JSONObject jsonObject = new JSONObject(result);
+                    double btcPrice = jsonObject.getJSONObject("bitcoin").getDouble("usd");
+                    NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+                    currencyFormat.setMaximumFractionDigits(0);
+                    String formattedPrice = currencyFormat.format(btcPrice);
+                    runOnUiThread(() -> textViewBTC.setText(formattedPrice));
+                    Log.i(TAG, "BTC Price: $" + formattedPrice);
+                } finally {
+                    urlConnection.disconnect();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopWeatherUpdates();
+        //stopMarketUpdates();
+        executorService.shutdown();
         handler.removeCallbacks(runnable);
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
 
