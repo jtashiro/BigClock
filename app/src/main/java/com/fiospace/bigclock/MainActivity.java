@@ -49,6 +49,9 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.fiospace.bitcoin_price_fetcher.BitcoinPriceFetcher;
+
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener  {
     private static final String TAG = "MainActivity";
     private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/";
@@ -279,8 +282,16 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private void fetchMarketData() {
         executorService.execute(() -> {
             try {
-                Log.i(TAG,"fetchMarketData() API call.");
-                URL url = new URL("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+                /**/
+                String marketDataSource = "Coinbase";
+                String formattedPrice = BitcoinPriceFetcher.getPrice(marketDataSource);
+                Log.i(TAG,marketDataSource + " BTC Price: " + formattedPrice);
+                runOnUiThread(() -> textViewBTC.setText(formattedPrice));
+
+                /**
+                Log.i(TAG, "fetchMarketData() API call.");
+
+                URL url = new URL("https://api.coinbase.com/v2/prices/spot?currency=USD");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
@@ -292,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     in.close();
                     String result = response.toString();
                     JSONObject jsonObject = new JSONObject(result);
-                    double btcPrice = jsonObject.getJSONObject("bitcoin").getDouble("usd");
+                    double btcPrice = jsonObject.getJSONObject("data").getDouble("amount");
                     NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
                     currencyFormat.setMaximumFractionDigits(0);
                     String formattedPrice = currencyFormat.format(btcPrice);
@@ -301,12 +312,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 } finally {
                     urlConnection.disconnect();
                 }
+                 **/
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.e(TAG,e.getMessage());
+                Log.e(TAG, e.getMessage());
             }
         });
     }
+
 
 
     @Override
