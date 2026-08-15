@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Keystore files (NEVER commit these unless you have a secure reason)
+*.jks
+*.keystore
+app/keystore.jks
+keystore.properties
+play-service-account.json
