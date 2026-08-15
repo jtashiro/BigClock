@@ -17,9 +17,9 @@
         android:theme="@style/Theme.BigClock"
         tools:targetApi="31">
         <activity
-            android:name=".SettingsActivity"
+            android:name=".LocationSettingsActivity"
             android:exported="false"
-            android:label="@string/title_activity_settings" >
+            android:label="Weather Location" >
         </activity>
         <activity
             android:name=".MainActivity"

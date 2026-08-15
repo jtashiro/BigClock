@@ -4,8 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.preference.PreferenceManager;
 
-import android.view.View;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,7 +17,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -27,16 +24,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textview.MaterialTextView;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.json.JSONObject;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -50,15 +39,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.fiospace.bitcoin_price_fetcher.BitcoinPriceFetcher;
+import com.fiospace.bigclock.datasources.homebrew.ForecastData;
+import com.fiospace.bigclock.datasources.homebrew.WeatherData;
+import com.fiospace.bigclock.datasources.nws.NationalWeatherServiceAPIClient;
 
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener  {
     private static final String TAG = "MainActivity";
-    private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/";
     private FusedLocationProviderClient fusedLocationClient;
     private Toolbar toolbar;
-    private String toolbarTitle;
-    private MenuItem settingsItem;
     private MaterialTextView textViewTime;
     private MaterialTextView textViewDate;
     private MaterialTextView textViewWeather;
@@ -79,6 +68,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private MaterialTextView textViewBTC;
     private ExecutorService executorService;
 
+    String marketDataSource = "Coinbase";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,42 +80,16 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         // Initialize SharedPreferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        //sharedPreferences = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
         // Register SharedPreferences change listener
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
-        String apiKey = sharedPreferences.getString("API_KEY", "");
-        if (apiKey.isEmpty()) {
-            Toast.makeText(this, "API key not set. Please go to settings and set the API key.", Toast.LENGTH_SHORT).show();
-            // set the font color for the toolbar and overflow item to white
-
-            //toolbar = findViewById(R.id.toolbar);
-           // setSupportActionBar(toolbar);
-            //return;
-        } else {
-            // Hide the status bar
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
+        // Hide the status bar
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        if (apiKey.isEmpty()) {
-            toolbar = findViewById(R.id.toolbar);
-            setSupportActionBar(toolbar);
-            //return;
-        } else {
-            // Hide the Toolbar when entering fullscreen mode
-            /*
-            toolbar = findViewById(R.id.toolbar);
-            if (toolbar != null) {
-                toolbar.setVisibility(View.GONE);
-            }
-
-             */
-        }
 
         // Keep the screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -158,6 +124,19 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void getLocationAndFetchWeather() {
+        String locationMode = sharedPreferences.getString(
+                LocationSettingsActivity.PREF_LOCATION_MODE, LocationSettingsActivity.LOCATION_MODE_DEVICE);
+
+        if (LocationSettingsActivity.LOCATION_MODE_ZIP.equals(locationMode)) {
+            double lat = sharedPreferences.getFloat(LocationSettingsActivity.PREF_ZIP_LATITUDE, 0f);
+            double lon = sharedPreferences.getFloat(LocationSettingsActivity.PREF_ZIP_LONGITUDE, 0f);
+            fetchWeather(lat, lon);
+            return;
+        }
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         Task<Location> locationTask = fusedLocationClient.getLastLocation();
         locationTask.addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
@@ -176,44 +155,21 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private void fetchWeather(double lat, double lon) {
         Log.i(TAG, "fetchWeather API call");
 
-        String apiKey = sharedPreferences.getString("API_KEY", "");
-        if (apiKey.isEmpty()) {
-            Toast.makeText(this, "API key not set. Please go to settings and set the API key.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        WeatherData weatherData = new WeatherData();
+        ForecastData forecastData = new ForecastData();
 
-        Gson gson = new GsonBuilder().create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        Log.d(TAG,retrofit.toString());
-
-        WeatherService weatherService = retrofit.create(WeatherService.class);
-        Call<WeatherResponse> call = weatherService.getCurrentWeather(lat, lon, apiKey, "imperial");
-        call.enqueue(new Callback<WeatherResponse>() {
-            @Override
-            public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    WeatherResponse weatherResponse = response.body();
-                    double temp = weatherResponse.getMain().getTemp();
-                    int roundedTemp = (int) Math.round(temp); // Round temperature to 0 decimal places
-
-                    String tempStringH = getString(R.string.temp, roundedTemp);
-                    textViewWeather.setText(tempStringH);
-                } else {
-                    Log.e(TAG, "Response unsuccessful or body is null");
-                    Log.e(TAG,response.message());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<WeatherResponse> call, Throwable t) {
-                Log.e(TAG, "Failed to fetch weather", t);
-            }
-        });
+        NationalWeatherServiceAPIClient client = new NationalWeatherServiceAPIClient(
+                lat, lon, weatherData, forecastData,
+                result -> {
+                    if (result != null) {
+                        int roundedTemp = Math.round(Float.parseFloat(weatherData.getTemperature()));
+                        String tempStringH = getString(R.string.temp, roundedTemp);
+                        runOnUiThread(() -> textViewWeather.setText(tempStringH));
+                    } else {
+                        Log.e(TAG, "Failed to fetch weather from National Weather Service");
+                    }
+                }, this);
+        client.execute();
     }
 
     private void startWeatherUpdates() {
@@ -283,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         executorService.execute(() -> {
             try {
                 /**/
-                String marketDataSource = "Coinbase";
+                //String marketDataSource = "Coinbase";
                 String formattedPrice = BitcoinPriceFetcher.getPrice(marketDataSource);
                 Log.i(TAG,marketDataSource + " BTC Price: " + formattedPrice);
                 runOnUiThread(() -> textViewBTC.setText(formattedPrice));
@@ -361,11 +317,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d("MainActivity", "onOptionsItemSelected called with item id: " + item.getItemId());
 
-        // enter the API KEY
-        if (item.getItemId() == R.id.settings) {
-            Log.d("MainActivity", "Settings menu item clicked");
-
-            Intent intent = new Intent(this, SettingsActivity.class);
+        if (item.getItemId() == R.id.action_location_settings) {
+            Intent intent = new Intent(this, LocationSettingsActivity.class);
             startActivity(intent);
             return true;
         }
@@ -389,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Log.i(TAG,"onResume():" );
 
         super.onResume();
+        getLocationAndFetchWeather();
     }
 
     @Override
@@ -401,11 +355,5 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.i(TAG,"key:" + key);
-        // Check if the key is related to weather settings
-        if (key.equals("API_KEY")) {
-            // Fetch weather data
-            Log.i(TAG,"Resetting API_KEY and startWeatherUpdates()");
-            startWeatherUpdates();
-        }
     }
 }

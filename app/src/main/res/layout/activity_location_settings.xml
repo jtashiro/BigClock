@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Weather Location"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/locationModeRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/radioDeviceLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:text="Use device location" />
+
+        <RadioButton
+            android:id="@+id/radioZipCountry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:text="Use zip/postal code" />
+
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/zipCodeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Zip/postal code"
+        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:inputType="text"
+        android:imeOptions="actionNext" />
+
+    <EditText
+        android:id="@+id/countryCodeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Country code (e.g. US)"
+        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:inputType="textCapCharacters"
+        android:maxLength="2"
+        android:imeOptions="actionDone" />
+
+    <Button
+        android:id="@+id/saveLocationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_gravity="end"
+        android:text="Save" />
+
+</LinearLayout>
